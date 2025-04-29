@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -45,10 +46,6 @@
             android:name=".BLEScanReceiver"
             android:exported="true"
             android:permission="com.example.ble_app.SCAN_RECEIVE" />
-        <service
-            android:name=".BleForegroundService"
-            android:exported="false"
-            android:foregroundServiceType="location" />
 
     </application>
 

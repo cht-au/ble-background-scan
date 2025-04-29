@@ -17,8 +17,7 @@ class BLEScanReceiver : BroadcastReceiver() {
         Log.d("BLEScanReceiver", "Received BLE scan result broadcast.")
         val results = intent.getParcelableArrayListExtra(
             BluetoothLeScanner.EXTRA_LIST_SCAN_RESULT,
-            ScanResult::class.java
-        )
+            ScanResult::class.java)
 
         if (results != null) {
             for (result in results) {
@@ -26,11 +25,11 @@ class BLEScanReceiver : BroadcastReceiver() {
                 val address = device.address
                 val rssi = result.rssi
                 Log.d("BLEScanReceiver", "Device found: $address, RSSI: $rssi")
-//                val notificationHelper = NotificationHandler(context)
-//                notificationHelper.buildNotfication(
-//                    title = "BLE Device Detected",
-//                    message = "Address: $address, RSSI: $rssi"
-//                )
+                val notificationHelper = NotificationHandler(context)
+                notificationHelper.buildNotification(
+                    title = "BLE Device Detected",
+                    message = "Address: $address, RSSI: $rssi"
+                )
             }
         }
     }

@@ -36,7 +36,7 @@ class NotificationHandler(private val context: Context) {
             notificationManager.createNotificationChannel(channel)
         }
     }
-    fun buildNotfication(title: String, message: String) {
+    fun buildNotification(title: String, message: String) {
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info) // Notification icon
             .setContentTitle(title) // Title displayed in the notification

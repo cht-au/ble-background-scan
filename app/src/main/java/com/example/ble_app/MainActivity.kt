@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.PendingIntent
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.BluetoothLeScanner
@@ -34,9 +35,12 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.ParcelUuid
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
@@ -74,41 +78,59 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         bluetoothManager = getSystemService(BluetoothManager::class.java)
-        bluetoothAdapter = bluetoothManager?.adapter // Use safe call to avoid NPE
+        bluetoothAdapter = bluetoothManager?.adapter
         bluetoothLeScanner = bluetoothAdapter?.bluetoothLeScanner
         val scanner = getSystemService(BluetoothManager::class.java).adapter?.bluetoothLeScanner
-        checkAndRequestPermissions()
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        if (scanner != null) {
-            startScan(this, scanner)
-        }
+
+        // Checking Permissions
+        requestBluetooth()
+//        checkAndRequestPermissions()
+
+
+//        if (scanner != null) {
+//            startScan(this, scanner)
+//        }
 
         enableEdgeToEdge()
 
-        // Background scanning using ChatGPT's class
-//        val intent = Intent(this, BleForegroundService::class.java)
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            startForegroundService(intent)
-//        } else {
-//            startService(intent)
-//        }
 
         setContent {
-            BleappTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+            Content()
+        }
+    }
+
+
+
+    @Composable
+    fun Content() {
+        BleappTheme {
+            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Button(
+                            onClick = { scanBackground() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Background Scan")
+                        }
+                        Button(
+                            onClick = { requestPushNotification() },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Request Notification")
+                        }
+                    }
                     Greeting(
                         name = "Android",
                         modifier = Modifier.padding(innerPadding),
@@ -120,49 +142,48 @@ class MainActivity : ComponentActivity() {
                         devicesMap = devicesMap
                     )
                 }
+
+
             }
         }
     }
-    private val REQUEST_PERMISSIONS_CODE = 1
-//    @RequiresApi(Build.VERSION_CODES.S)
-    private fun checkAndRequestPermissions() {
-        val permissions = mutableListOf<String>()
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
-        }
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
-        }
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        }
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-        if (permissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_PERMISSIONS_CODE)
-        }
-    }
+
+//    private val REQUEST_PERMISSIONS_CODE = 1
+//    private fun checkAndRequestPermissions() {
+//        val permissions = mutableListOf<String>()
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+//            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+//        }
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+//            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+//        }
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+//        }
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+//        }
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+//            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+//        }
+//        if (permissions.isNotEmpty()) {
+//            ActivityCompat.requestPermissions(this, permissions.toTypedArray(), REQUEST_PERMISSIONS_CODE)
+//        }
+//    }
+
     private fun scanLeDevice() {
         if (!scanning) { // Stops scanning after a pre-defined scan period.
             handler.postDelayed({
                 scanning = false
+
                 if (ActivityCompat.checkSelfPermission(
                         this,
                         Manifest.permission.BLUETOOTH_SCAN
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
+                    // TODO: Consider calling ActivityCompat#requestPermissions
                 }
+
                 bluetoothLeScanner?.stopScan(leScanCallback)
             }, SCAN_PERIOD)
             scanning = true
@@ -217,14 +238,93 @@ class MainActivity : ComponentActivity() {
                 .build(),
         )
         // Empty filter for debugging
-//      val scanFilters = emptyList<ScanFilter>()
+//        val scanFilters = emptyList<ScanFilter>()
 
-        Log.d("BLEScanReceiver", "Before scanning")
+        Log.d("BLEScanReceiver", "Scanning")
         scanner.startScan(scanFilters, scanSettings, resultIntent)
-        Log.d("BLEScanReceiver", "After scanning")
         return resultIntent
     }
+    private fun requestBluetooth() {
+        // check android 12+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+
+            val permissions = mutableListOf(
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            )
+            requestMultiplePermissions.launch(
+                permissions.toTypedArray()
+            )
+            // This is big location
+//            requestMultiplePermissions.launch(
+//                arrayOf(
+//                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+//                )
+//            )
+//            requestMultiplePermissions.launch(
+//                arrayOf(
+//                    Manifest.permission.POST_NOTIFICATIONS
+//                )
+//            )
+        } else {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            requestEnableBluetooth.launch(enableBtIntent)
+        }
+    }
+    private val requestEnableBluetooth =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                // granted
+            } else {
+                // denied
+            }
+        }
+    private val requestMultiplePermissions =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            permissions.entries.forEach {
+                Log.d("BLES", "${it.key} = ${it.value}")
+            }
+        }
+
+    @RequiresApi(Build.VERSION_CODES.O) //required for scanning
+    private fun scanBackground() {
+        val scanner = getSystemService(BluetoothManager::class.java).adapter?.bluetoothLeScanner
+        if (scanner != null) {
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestBackgroundLocation()
+            }
+            startScan(this, scanner)
+        }
+
+
+    }
+    private fun requestBackgroundLocation() {
+        Log.d("BLES", "Requesting background location")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            requestBackgroundLocationPermission.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+    }
+    private val requestBackgroundLocationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            Log.d("Permissions", "Background location granted: $isGranted")
+        }
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun requestPushNotification() {
+        Log.d("BLES", "Requesting Post Notificatino")
+        requestPushNotification.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+    private val requestPushNotification =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            Log.d("Permissions", "Push Notifcation Permission Granted: $isGranted")
+        }
 }
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier, onScanClick: () -> Unit, devices: List<String>,devicesMap: Map<String,Int> ) {
@@ -242,12 +342,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier, onScanClick: () -> Uni
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "Discovered Devices:")
-//        LazyColumn {
-//            items(devices) { device ->
-//                Text(text = device, fontSize = 12.sp)
-//                HorizontalDivider()
-//            }
-//        }
         LazyColumn {
             items(devicesMap.entries.toList().sortedBy { -it.value }) { (address, rssi) ->
                 DeviceItem(address = address, rssi = rssi)
